@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime as dtmdtm
-from path_config import mkdir_if_not_exist, L0_PATH, RAW_PATH
+from config.path_config import mkdir_if_not_exist, L0_PATH, RAW_PATH
 
 idx_start = 3  # position of data start in a line
 idx_end = -5
