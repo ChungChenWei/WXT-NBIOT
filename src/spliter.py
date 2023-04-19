@@ -12,7 +12,7 @@ idx_station = -3
 def main(file_path):
     date = dtmdtm.strptime(file_path.stem, "%Y%m%dERR")
 
-    df = pd.DataFrame()
+    df = pd.DataFrame(columns=["station", "datetime"])
     with open(file_path) as fi:
         lines = fi.readlines()
         for line in lines:
