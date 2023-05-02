@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.dates import DateFormatter, DayLocator, HourLocator
 
-from config.path_config import L0_PATH, PICT_DIR, mkdir_if_not_exist
+from config.path_config import MERGE_PATH, PICT_DIR, mkdir_if_not_exist
 from config.wxt_config import WXT_META
 
 
@@ -28,7 +28,7 @@ def add_meta(ax: plt.Axes, end_time: dtmdtm, df: pd.DataFrame, date, station, di
         fontsize=fs - 12,
     )
     xdate = dtmdtm.strptime(date, "%Y%m%d")
-    ax.set_xlim(xdate + dt(hours=8), xdate + dt(hours=8 + 24))
+    ax.set_xlim(xdate, xdate + dt(hours=24))
     ymin, ymax = ax.get_ylim()
     for xs, xe in zip(timeseries[:-1][idx_stop], timeseries[1:][idx_stop]):
         ax.fill_betweenx(np.linspace(ymin, ymax), [xs], [xe], color="red", alpha=0.2)
@@ -88,7 +88,7 @@ def add_datacnt(ax: plt.Axes, dfh: pd.DataFrame, name, date, freq="1H"):
         periods = 24 * 6 + 1
         ax.set_xticks(np.arange(periods) + 0.1)
         ax.set_xlim(0, 24 * 6)
-    ridx = pd.date_range(date, freq=freq, periods=periods) + dt(hours=8)
+    ridx = pd.date_range(date, freq=freq, periods=periods)
     dfh = dfh.reindex(ridx)
     dfh = dfh.fillna(0)
 
@@ -228,6 +228,10 @@ def plot_WSWD(df: pd.DataFrame, date, station):
     mean_df10m = df10m.mean()
     mean_df10m.index = mean_df10m.index + dt(minutes=10)
 
+    df1h = df.resample("1H")
+    mean_df1h = df1h.mean()
+    mean_df1h.index = mean_df1h.index + dt(minutes=30)
+
     f, ax = base()
 
     ax_ari = add_arithmetic_wind_speed(ax, mean_df10m, WS)
@@ -241,6 +245,10 @@ def plot_WSWD(df: pd.DataFrame, date, station):
 
     # add_wind_direction_var(ax, mean_df10m, WD)
     add_wind_direction(ax.twinx(), mean_df10m)
+
+    plt.barbs(
+        mean_df1h.index, [315] * len(mean_df1h.index), mean_df1h["U"] * 1.94, mean_df1h["V"] * 1.94,
+    )
 
     add_datacnt(ax.twiny(), df.resample("1H"), WS, date)
     add_meta(ax, df.index[-1], mean_df10m.dropna(subset=[WD]), date, station, diff=10)
@@ -273,17 +281,19 @@ if __name__ == "__main__":
     targets = [(utc - dt(minutes=10)).strftime("%Y%m%d"), utc.strftime("%Y%m%d")]
     if targets[0] == targets[1]:
         targets.pop(0)
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 1 and sys.argv[1] == "all":
         series = pd.date_range("20230412", dtmdtm.now())
         targets = [t.strftime("%Y%m%d") for t in series]
-    # targets = ["20230413"]
+    elif len(sys.argv) > 1:
+        targets = sys.argv[1:]
+    print(targets)
     for date in targets:
-        for station_file in (L0_PATH / date).glob("*.csv"):
+        for station_file in (MERGE_PATH / date).glob("*.csv"):
             print(station_file)
             station = station_file.stem
 
-            df = pd.read_csv(L0_PATH / date / f"{station}.csv", index_col="datetime")
-            df.index = pd.DatetimeIndex(df.index) + dt(hours=8)
+            df = pd.read_csv(MERGE_PATH / date / f"{station}.csv", index_col="datetime")
+            df.index = pd.DatetimeIndex(df.index)
 
             meta = WXT_META[station]
             WS = meta["WS"]
