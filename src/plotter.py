@@ -277,7 +277,7 @@ def plot_UV(df: pd.DataFrame, date, station):
 
 
 if __name__ == "__main__":
-    utc = dtmdtm.utcnow()
+    utc = dtmdtm.now()
     targets = [(utc - dt(minutes=10)).strftime("%Y%m%d"), utc.strftime("%Y%m%d")]
     if targets[0] == targets[1]:
         targets.pop(0)

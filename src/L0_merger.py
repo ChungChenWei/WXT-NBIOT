@@ -20,7 +20,7 @@ def merge(files: List[Path]):
 
 
 if __name__ == "__main__":
-    utc = dtmdtm.utcnow()
+    utc = dtmdtm.now()
     series = pd.date_range("20230412", dtmdtm.now())
     targets = [t.strftime("%Y%m%d") for t in series]
 
