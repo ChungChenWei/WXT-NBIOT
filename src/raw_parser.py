@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from config.path_config import DATA_DIR, L0_PATH, RAW_PATH, mkdir_if_not_exist
+from config.path_config import L0_PATH, RAW_PATH, mkdir_if_not_exist
+from utils import dump_hash, get_file_md5, load_hash
 
 FTP_IDX = {
     "data_start": 3,
@@ -47,11 +48,13 @@ def line_parser(line: str, data_start: int, data_end: int, station_idx: int):
 
 
 def parser(file_path: Path, mode: str):
-    with open(file_path) as fi:
+    with open(file_path, errors="replace") as fi:
         lines = filter(check_line_valid, fi.readlines())
-        records = list(map(partial(line_parser, **IDX[mode]), lines))
-        df = pd.DataFrame(records)
-        df.set_index("datetime", inplace=True)
+    records = list(map(partial(line_parser, **IDX[mode]), lines))
+    if len(records) == 0:
+        return
+    df = pd.DataFrame(records)
+    df.set_index("datetime", inplace=True)
 
     to_split_station_L0(df, L0_PATH / mode)
 
@@ -70,6 +73,10 @@ def dataset_processor(data):
         if "#" in dataset or len(dataset) != 4:
             continue
         val = dataset.pop(1)
+        try:
+            float(val)
+        except ValueError:
+            return {}
         key = "".join(dataset)
         record[key] = val
     return record
@@ -93,29 +100,8 @@ def to_split_station_L0(df: pd.DataFrame, target: Path):
                 print(e)
 
 
-def get_file_md5(filename):
-    hash_md5 = md5()
-    with open(filename, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
-
 def get_files(mode: str, filter="*"):
     return list((RAW_PATH / mode).rglob(filter))
-
-
-def load_hash(mode: str):
-    try:
-        with open(DATA_DIR / f"raw_{mode}_hash.json", "r") as fi:
-            return json.load(fi)
-    except FileNotFoundError:
-        return {}
-
-
-def dump_hash(hash: dict, mode: str):
-    with open(DATA_DIR / f"raw_{mode}_hash.json", "w") as fo:
-        json.dump(hash, fo, indent=2)
 
 
 if __name__ == "__main__":
@@ -132,8 +118,9 @@ if __name__ == "__main__":
         print("Mode not found")
         exit()
 
-    hash = load_hash(mode)
+    hash = load_hash(mode, "raw")
     for file in files:
+        print(file)
         hash_idx = f"{file.parent.name}{file.name}"
 
         currnt_md5_hash = get_file_md5(file)
@@ -145,4 +132,4 @@ if __name__ == "__main__":
         hash[hash_idx] = currnt_md5_hash
         print(hash_idx, "updated")
 
-        dump_hash(hash, mode)
+        # dump_hash(hash, mode, "raw")
