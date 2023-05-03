@@ -119,7 +119,7 @@ def add_vector_wind_speed(ax: plt.Axes, df: pd.DataFrame, ax_c="r"):
 
 
 def add_wind_direction(ax: plt.Axes, df: pd.DataFrame, ax_c="k"):
-    df["WD"] = (np.rad2deg(np.arctan2(-df["V"], -df["U"])) + 360) % 360
+    df["WD"] = (270 - np.rad2deg(np.arctan2(df["V"], df["U"]))) % 360
     ax.plot(df.index, df["WD"], "o", color=ax_c, zorder=10)
     ax.set_ylabel("vectro wind direction [o]", color=ax_c)
     ax.spines["left"].set_visible(False)
@@ -304,6 +304,6 @@ if __name__ == "__main__":
 
             # plot_WS(df, date, station)
             # plot_WD(df, date, station)
-            # plot_UV(df, date, station)
+            plot_UV(df, date, station)
             plot_TUR(df, date, station)
             plot_WSWD(df, date, station)
