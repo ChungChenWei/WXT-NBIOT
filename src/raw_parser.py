@@ -132,4 +132,4 @@ if __name__ == "__main__":
         hash[hash_idx] = currnt_md5_hash
         print(hash_idx, "updated")
 
-        # dump_hash(hash, mode, "raw")
+        dump_hash(hash, mode, "raw")
