@@ -3,7 +3,9 @@
 ## 流程
 
 - `download.py`
-- `spliter.py`
+- `raw_parser.py`
+- `L0_merger.py`
+- `plotter.py`
 
 ## 說明
 
@@ -13,6 +15,14 @@
 - 需要搭配 `ftp_config.py` 設定 `ip` 與帳號密碼。
 - 格式請參考 `ftp_config.example.py` 並於設定完成後複製更名為 `ftp_config.py`。
 
-### `spliter.py`
+### `raw_parser.py`
 
 - 將原始資料以日期與站名拆解。
+
+### `L0_merger.py`
+
+- 將 `ftp` 與 `sd` 資料進行合併
+
+### `plotter.py`
+
+- 繪圖
